@@ -262,6 +262,40 @@ linux_read_proc_stat(void)
 	rewind(f);
 	}
 
+/* borrow the read_sysfs_entry function declared below used for power supply */
+static gboolean
+read_sysfs_entry (gchar *buf, gint buflen, gchar const *sysentry);
+
+/* read CPU frequencies */
+static void
+linux_read_cpufreq(void)
+{
+    gint ncpu;
+    gchar buf[32];
+    gchar sysfs_path[128];
+    gint n;
+    static gint	data_read_tick	= -1;
+
+    n = gkrellm_get_timer_ticks();
+    if (data_read_tick == n)
+        return;		/* Just one read per tick (multiple monitors call this) */
+
+    data_read_tick = n;
+
+    for (ncpu=0; ncpu < n_cpus; ncpu++)
+    {
+        g_snprintf(sysfs_path, sizeof(sysfs_path),
+                   "/sys/devices/system/cpu/cpu%d/cpufreq/scaling_cur_freq",
+                   ncpu);
+        if (read_sysfs_entry (buf, sizeof (buf), sysfs_path))
+        {
+            gulong freq;
+            freq = strtol(buf, NULL, 0);
+            //g_debug("CPU %d frequency: %lu\n", ncpu, freq);
+            gkrellm_cpu_assign_frequency(ncpu, freq);
+        }
+    }
+}
 
 /* ===================================================================== */
 /* CPU monitor interface */
@@ -273,6 +307,7 @@ gkrellm_sys_cpu_read_data(void)
 	| call it, but only the first call per timer tick will do the work.
 	*/
 	linux_read_proc_stat();
+        linux_read_cpufreq();
 	}
 
 gboolean

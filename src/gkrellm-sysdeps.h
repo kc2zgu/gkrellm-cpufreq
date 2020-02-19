@@ -113,7 +113,7 @@ void	gkrellm_cpu_assign_composite_data(gulong user, gulong nice,
 				gulong sys, gulong idle);
 void	gkrellm_cpu_assign_data(gint n, gulong user, gulong nice,
 				gulong sys, gulong idle);
-
+void	gkrellm_cpu_assign_frequency(gint n, gulong freq);
 
 /* ===================================================================== */
 /* Proc monitor interface

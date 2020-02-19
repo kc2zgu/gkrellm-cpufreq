@@ -87,6 +87,7 @@ typedef struct
 					nice,
 					sys,
 					idle;
+	gulong			frequency;
 	}
 	CpuMon;
 
@@ -255,6 +256,24 @@ gkrellm_cpu_assign_data(gint n, gulong user, gulong nice,
 		}
 	}
 
+void
+gkrellm_cpu_assign_frequency(gint n, gulong freq)
+{
+	CpuMon	*cpu = NULL;
+	GList	*list;
+
+	for (list = cpu_mon_list; list; list = list->next)
+		{
+		cpu = (CpuMon *) list->data;
+		if (cpu->instance == n)
+			break;
+		}
+	if (list)
+		{
+                    cpu->frequency = freq;
+                }
+}
+
 /* ======================================================================== */
 /* Exporting CPU data for plugins */
 
@@ -292,7 +311,7 @@ static void
 format_cpu_data(CpuMon *cpu, gchar *src_string, gchar *buf, gint size)
 	{
 	gchar			c, *s;
-	gint			len, sys, user, nice = 0, total, t;
+	gint			len, sys, user, nice = 0, freq, total, t;
 
 	if (!buf || size < 1)
 		return;
@@ -303,6 +322,7 @@ format_cpu_data(CpuMon *cpu, gchar *src_string, gchar *buf, gint size)
 	sys = gkrellm_get_current_chartdata(cpu->sys_cd);
 	user = gkrellm_get_current_chartdata(cpu->user_cd);
 	total = sys + user;
+        freq = cpu->frequency / 1000;
 	if (!nice_time_unsupported)
 		{
 		nice = gkrellm_get_current_chartdata(cpu->nice_cd);
@@ -323,6 +343,11 @@ format_cpu_data(CpuMon *cpu, gchar *src_string, gchar *buf, gint size)
 				t = user;
 			else if (c == 'n')
 				t = nice;
+                        else if (c == 'f')
+                            if (freq > 0)
+                                len = snprintf(buf, size, "%.1fG", (double)freq / 1000.0);
+                            else
+                                len = snprintf(buf, size, "--");
 			else if (c == 'L')
 				len = snprintf(buf, size, "%s", cpu->panel_label);
 			else if (c == 'N')

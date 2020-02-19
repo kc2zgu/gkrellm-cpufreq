@@ -114,7 +114,8 @@ typedef struct
 	gulong	user,
 			nice,
 			sys,
-			idle;
+            idle,
+            frequency;
 	}
 	CpuData;
 
@@ -184,6 +185,25 @@ gkrellm_cpu_assign_data(gint n, gulong user, gulong nice,
 		cpu->idle = idle;
 		}
 	}
+
+void
+gkrellm_cpu_assign_frequency(gint n, gulong freq)
+{
+	CpuData	*cpu = NULL;
+	GList	*list;
+
+	for (list = cpu_list; list; list = list->next)
+		{
+		cpu = (CpuData *) list->data;
+		if (cpu->instance == n)
+			break;
+		}
+	if (list)
+		{
+                    cpu->frequency = freq;
+                }
+}
+
 
 static void
 update_cpu(GkrellmdMonitor *mon, gboolean first_update)
